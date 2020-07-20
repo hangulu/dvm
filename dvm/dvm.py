@@ -261,14 +261,12 @@ def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         if verbose:
             print(f"[{cur_alg_step}/{alg_steps}] Creating the binomial coefficients...")
         cur_alg_step += 1
-        # Get the coefficients for the binomial calculations
-        coeff_dicts = pv.get_coefficients(demo_per_prec, observed_per_prec)
 
         # Apply `prob_votes` to every precinct
         def prob_log_prob_fn(phc):
             prob_list = []
             for prec, prec_votes in observed_per_prec.items():
-                prob_list.append(pv.prob_votes(phc, demo_per_prec[prec], prec_votes, coeff_dicts[prec]))
+                prob_list.append(pv.prob_votes(phc, demo_per_prec[prec], prec_votes))
 
             return tf.math.reduce_mean(prob_list)
 
@@ -423,15 +421,12 @@ def rwm(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         if verbose:
             print(f"[{cur_alg_step}/{alg_steps}] Creating the binomial coefficients...")
         cur_alg_step += 1
-        # Get the coefficients for the binomial calculations,
-        # for each precinct
-        coeff_dicts = pv.get_coefficients(demo_per_prec, observed_per_prec)
 
         # Apply `prob_votes` to every precinct
         def prob_log_prob_fn(phc):
             prob_list = []
             for prec, prec_votes in observed_per_prec.items():
-                prob_list.append(pv.prob_votes(phc, demo_per_prec[prec], prec_votes, coeff_dicts[prec]))
+                prob_list.append(pv.prob_votes(phc, demo_per_prec[prec], prec_votes))
 
             return tf.math.reduce_mean(prob_list)
 

@@ -42,6 +42,19 @@ def get_vote_pcts_per_prec(index, matrix_dim, prec_demo):
     return {group: (tf.cast(index[num], tf.float32) + 0.5) / matrix_dim for num, group in enumerate(prec_demo)}
 
 
+def get_vote_pcts_list(index, matrix_dim):
+    """
+    Find the vote percentages for each demographic group,
+    given the index of an associated PHC.
+
+    index (int tuple): the index of the PHC
+    matrix_dim (int): the size of one dimension of the PHC
+
+    return: a list of the vote percentages for each demographic
+    """
+    return (tf.cast(index, tf.float32) + 0.5) / matrix_dim
+
+
 class Election:
     """
     An election in a district.
