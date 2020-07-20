@@ -16,6 +16,10 @@ import kings_ei as kei
 import phc
 import tools
 
+# Suppress logging for pyMC3
+pymc3_logger = logging.getLogger('pymc3')
+pymc3_logger.setLevel(logging.CRITICAL)
+
 
 def dvm_evaluator(election, label, candidate=None, phc_granularity=10,
                   hmc=False, expec_scoring=False, burn_frac=0.3,
@@ -37,7 +41,7 @@ def dvm_evaluator(election, label, candidate=None, phc_granularity=10,
     burn_frac (float): the fraction of MCMC iterations to burn
     n_steps (int): the number of steps to run the MCMC for
     n_iter (int): the number of times to repeat the experiment
-    verbose (bool): whether to display loogging and progress bars
+    verbose (bool): whether to display logging and progress bars
 
     return: a dictionary of the label, times and MSEs for
     the Discrete Voter Model
@@ -82,6 +86,7 @@ def dvm_evaluator(election, label, candidate=None, phc_granularity=10,
         best_cell_mle_phc = tools.get_most_probable_cell(mle_phc)
         best_cell_mean_phc = tools.get_most_probable_cell(mean_phc)
 
+        # Find the vote percentages the most probable cells calculate
         vote_pcts_mle_phc = elect.get_vote_pcts(best_cell_mle_phc, phc_granularity, election.dpp)
         vote_pcts_mean_phc = elect.get_vote_pcts(best_cell_mean_phc, phc_granularity, election.dpp)
 
@@ -139,11 +144,6 @@ def batch_dvm_eval(experiments, n_steps, n_iter, phc_granularity, hmc=True,
     df['n_steps'] = n_steps
 
     return df
-
-
-# Suppress logging for pyMC3
-pymc3_logger = logging.getLogger('pymc3')
-pymc3_logger.setLevel(logging.CRITICAL)
 
 
 def kei_evaluator(election, label, candidate=None, n_steps=500, n_iter=1,
