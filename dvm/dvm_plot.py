@@ -80,8 +80,8 @@ def trace_plot(chain_results, trace='prob', show_title=False, save=False,
 
     if save:
         plt.savefig(f"{filename}.png", dpi=300, bbox_inches='tight')
-
-    plt.show()
+    else:
+        plt.show()
 
 
 def phc_plot_flat(phc, show_title=False, save=False,
@@ -115,8 +115,8 @@ def phc_plot_flat(phc, show_title=False, save=False,
 
     if save:
         plt.savefig(f"{filename}.png", dpi=300)
-
-    plt.show()
+    else:
+        plt.show()
 
 
 def phc_plot_2d_dist(phc, demo, show_title=False, save=False,
@@ -173,8 +173,8 @@ def phc_plot_2d_dist(phc, demo, show_title=False, save=False,
 
     if save:
         plt.savefig(f"{filename}.png")
-
-    plt.show()
+    else:
+        plt.show()
 
 
 def phc_plot_2d(phc, demo, show_title=False, save=False,
@@ -221,8 +221,8 @@ def phc_plot_2d(phc, demo, show_title=False, save=False,
 
     if save:
         plt.savefig(f"{filename}.png", dpi=300)
-
-    plt.show()
+    else:
+        plt.show()
 
 
 def phc_plot_3d(phc, demo, show_title=False, save=False,
@@ -323,5 +323,5 @@ def phc_plot_3d(phc, demo, show_title=False, save=False,
 
     if save:
         plt.savefig(f"{filename}.png", dpi=300, bbox_inches='tight')
-
-    plt.show()
+    else:
+        plt.show()
