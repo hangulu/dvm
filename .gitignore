@@ -1,5 +1,6 @@
 # Project-specific files
 pickles/
+untracked/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
