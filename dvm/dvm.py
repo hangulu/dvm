@@ -59,8 +59,10 @@ def rwm_proposal_fn(states, seed, epsilon=0.001):
 
     # Select two random cells in the PHC
     size = tf.reduce_prod(state.shape)
-    cell_1_index = tf.random.uniform(shape=[], minval=0, maxval=size - 1, dtype=tf.int32)
-    cell_2_index = tf.random.uniform(shape=[], minval=0, maxval=size - 1, dtype=tf.int32)
+    cell_1_index = tf.random.uniform(
+        shape=[], minval=0, maxval=size - 1, dtype=tf.int32)
+    cell_2_index = tf.random.uniform(
+        shape=[], minval=0, maxval=size - 1, dtype=tf.int32)
 
     # Flatten the state and change the cells
     flattened_state = tf.reshape(state, [-1]).numpy()
@@ -139,7 +141,7 @@ def burn_in(chain_result_tensor, burn_frac):
     return tf.slice(chain_result_tensor, begin, size)
 
 
-def dvm_elections(election, candidate=None, phc_granularity=10, hmc=False,
+def dvm_elections(election, candidate=None, phc_granularity=10, use_hmc=False,
                   expec_scoring=False, burn_frac=0.3, n_steps=200, n_iter=1,
                   verbose=False):
     """
@@ -148,7 +150,7 @@ def dvm_elections(election, candidate=None, phc_granularity=10, hmc=False,
     election (Election): the election to analyze
     candidate (string): the candidate to analyze
     phc_granularity (int): the size of a dimension of the PHC
-    hmc (bool): whether to use the HMC or RWM kernel
+    use_hmc (bool): whether to use the HMC or RWM kernel
     expec_scoring (bool): whether to score by:
         1. the probability of a PHC to produce the outcome
         (False, default)
@@ -175,7 +177,7 @@ def dvm_elections(election, candidate=None, phc_granularity=10, hmc=False,
     total_time = 0
     total_time -= time.time()
 
-    if hmc:
+    if use_hmc:
         chain_results = hmc(n_steps, burn_frac, initial_phc,
                             election.dpp, cand_obs_votes,
                             expec_scoring=expec_scoring,
@@ -193,6 +195,7 @@ def dvm_elections(election, candidate=None, phc_granularity=10, hmc=False,
             'time': total_time}
 
 
+@tf.function
 def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         expec_scoring=False, init_step_size=0.03, adaptation_frac=0.6,
         pause_point=10, verbose=True):
@@ -215,7 +218,7 @@ def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
     adaptation_frac (float): the fraction of the burn in steps to be used
     for step size adaptation
     pause_point (int): the number of iterations to run in each chain chunk
-    verbose (bool): whether to display loogging and progress bars
+    verbose (bool): whether to display logging and progress bars
 
     return: a Python dictionary containing the sample, the
     type of scorer, and traces of log probability and log acceptance
@@ -230,7 +233,8 @@ def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
     remainder = fixed_size_steps % pause_point
 
     if verbose:
-        print(f"This Hamiltonian Monte Carlo chain will be run in {num_chunks} chunks of size {pause_point}, with {num_adaptation_steps} steps of adaptation and {remainder} steps at the end.\n")
+        print(
+            f"This Hamiltonian Monte Carlo chain will be run in {num_chunks} chunks of size {pause_point}, with {num_adaptation_steps} steps of adaptation and {remainder} steps at the end.\n")
 
     sample_chunks = []
     log_prob_trace_chunks = []
@@ -248,7 +252,8 @@ def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         def expec_log_prob_fn(phc):
             expec_list = []
             for prec, prec_votes in observed_per_prec.items():
-                expec_list.append(ev.prob_from_expec(phc, demo_per_prec[prec], prec_votes))
+                expec_list.append(ev.prob_from_expec(
+                    phc, demo_per_prec[prec], prec_votes))
 
             return tf.math.reduce_mean(expec_list)
 
@@ -259,21 +264,24 @@ def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         scorer = 'prob'
 
         if verbose:
-            print(f"[{cur_alg_step}/{alg_steps}] Creating the binomial coefficients...")
+            print(
+                f"[{cur_alg_step}/{alg_steps}] Creating the binomial coefficients...")
         cur_alg_step += 1
 
         # Apply `prob_votes` to every precinct
         def prob_log_prob_fn(phc):
             prob_list = []
             for prec, prec_votes in observed_per_prec.items():
-                prob_list.append(pv.prob_votes(phc, demo_per_prec[prec], prec_votes))
+                prob_list.append(pv.prob_votes(
+                    phc, demo_per_prec[prec], prec_votes))
 
             return tf.math.reduce_mean(prob_list)
 
         target_log_prob_fn = expec_log_prob_fn
 
     # Initialize the adaptive HMC transition kernel
-    adaptive_hmc_kernel = init_hmc_kernel(target_log_prob_fn, init_step_size, num_adaptation_steps)
+    adaptive_hmc_kernel = init_hmc_kernel(
+        target_log_prob_fn, init_step_size, num_adaptation_steps)
 
     if verbose:
         print(f"[{cur_alg_step}/{alg_steps}] Running the chain for {num_adaptation_steps} steps to adapt the step size...")
@@ -293,7 +301,8 @@ def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         log_prob_trace_chunks.append(trace[0])
         log_accept_trace_chunks.append(trace[1])
 
-        adapted_step_size = tools.find_last_finite(step_size_trace, default=init_step_size)
+        adapted_step_size = tools.find_last_finite(
+            step_size_trace, default=init_step_size)
     else:
         adapted_step_size = init_step_size
 
@@ -319,7 +328,8 @@ def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         log_accept_trace_chunks.append(log_accept_trace)
 
     if verbose:
-        print(f"[{cur_alg_step}/{alg_steps}] Running the chain for {remainder} more steps...")
+        print(
+            f"[{cur_alg_step}/{alg_steps}] Running the chain for {remainder} more steps...")
     cur_alg_step += 1
 
     # Run the chain for the remainder of steps
@@ -353,13 +363,15 @@ def hmc(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
 
     if verbose:
         print("Done.")
-        print(f"Generated a sample of {num_samples} observations in ~{elapsed} seconds.")
+        print(
+            f"Generated a sample of {num_samples} observations in ~{elapsed} seconds.")
     return {'sample': burned_chain,
             'scorer': scorer,
             'log_prob_trace': burned_log_prob_trace,
             'log_accept_trace': burned_log_accept_trace}
 
 
+@tf.function
 def rwm(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         expec_scoring=False, pause_point=10, verbose=True):
     """
@@ -390,7 +402,8 @@ def rwm(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
     remainder = n_iter % pause_point
 
     if verbose:
-        print(f"The Random Walk Metropolis chain will be run in {num_chunks} chunks of size {pause_point}, with {remainder} steps at the end.\n")
+        print(
+            f"The Random Walk Metropolis chain will be run in {num_chunks} chunks of size {pause_point}, with {remainder} steps at the end.\n")
 
     sample_chunks = []
     log_prob_trace_chunks = []
@@ -408,7 +421,8 @@ def rwm(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         def expec_log_prob_fn(phc):
             expec_list = []
             for prec, prec_votes in observed_per_prec.items():
-                expec_list.append(ev.prob_from_expec(phc, demo_per_prec[prec], prec_votes))
+                expec_list.append(ev.prob_from_expec(
+                    phc, demo_per_prec[prec], prec_votes))
 
             return tf.math.reduce_mean(expec_list)
 
@@ -419,14 +433,16 @@ def rwm(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         scorer = 'prob'
 
         if verbose:
-            print(f"[{cur_alg_step}/{alg_steps}] Creating the binomial coefficients...")
+            print(
+                f"[{cur_alg_step}/{alg_steps}] Creating the binomial coefficients...")
         cur_alg_step += 1
 
         # Apply `prob_votes` to every precinct
         def prob_log_prob_fn(phc):
             prob_list = []
             for prec, prec_votes in observed_per_prec.items():
-                prob_list.append(pv.prob_votes(phc, demo_per_prec[prec], prec_votes))
+                prob_list.append(pv.prob_votes(
+                    phc, demo_per_prec[prec], prec_votes))
 
             return tf.math.reduce_mean(prob_list)
 
@@ -454,7 +470,8 @@ def rwm(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
         log_accept_trace_chunks.append(log_accept_trace)
 
     if verbose:
-        print(f"[{cur_alg_step}/{alg_steps}] Running the chain for {remainder} more steps...")
+        print(
+            f"[{cur_alg_step}/{alg_steps}] Running the chain for {remainder} more steps...")
     cur_alg_step += 1
 
     # Run the chain for the remainder of steps
@@ -488,7 +505,8 @@ def rwm(n_iter, burn_frac, initial_phc, demo_per_prec, observed_per_prec,
 
     if verbose:
         print("Done.")
-        print(f"Generated a sample of {num_samples} observations in ~{elapsed} seconds.")
+        print(
+            f"Generated a sample of {num_samples} observations in ~{elapsed} seconds.")
     return {'sample': burned_chain,
             'scorer': scorer,
             'log_prob_trace': burned_log_prob_trace,

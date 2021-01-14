@@ -121,16 +121,19 @@ class Election:
         result = {}
         for prec in self.precincts:
             # Set up the result dictionary for the electoral outcome
-            prec_result = {cand: (0, {group: 0 for group in self.dpp[prec]}) for cand in self.candidates}
+            prec_result = {
+                cand: (0, {group: 0 for group in self.dpp[prec]}) for cand in self.candidates}
 
             # Iterate through each demographic group
             for group in self.dpp[prec]:
                 # Extract information from the DVP dictionary
-                demo_vote_frac = np.fromiter(self.dvp[prec][group].values(), dtype=float)
+                demo_vote_frac = np.fromiter(
+                    self.dvp[prec][group].values(), dtype=float)
                 n_voters = self.dpp[prec][group]
 
                 # Simulate each voter
-                votes = np.random.choice(self.candidates, n_voters, p=demo_vote_frac)
+                votes = np.random.choice(
+                    self.candidates, n_voters, p=demo_vote_frac)
                 for cand in votes:
                     prev_total, prev_demo_votes = prec_result[cand]
                     prev_demo_votes[group] += 1
@@ -173,7 +176,7 @@ class Election:
         return f"A real election with {len(self.candidates)} candidates in a district with {len(self.precincts)} precincts and {self.num_demo_groups} demographic groups."
 
 
-def create_elections(voting_data, demo_data, name, id='prec_id'):
+def create_elections(voting_data, demo_data, name, merge_id='prec_id'):
     """
     Create elections from Pandas DataFrames of voting and
     demographic data.
@@ -189,7 +192,7 @@ def create_elections(voting_data, demo_data, name, id='prec_id'):
 
     candidates = list(voting_data.columns)
 
-    combined_data = pd.merge(voting_data, demo_data, on=id)
+    combined_data = pd.merge(voting_data, demo_data, on=merge_id)
 
     demo_per_prec = {}
     cand_vote_totals_per_prec = {}
