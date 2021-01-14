@@ -1,6 +1,7 @@
 # Project-specific files
 pickles/
 untracked/
+untracked_*
 *.code-workspace
 
 # Byte-compiled / optimized / DLL files
